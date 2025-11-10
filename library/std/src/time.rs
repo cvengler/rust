@@ -511,6 +511,14 @@ impl SystemTime {
     #[stable(feature = "assoc_unix_epoch", since = "1.28.0")]
     pub const UNIX_EPOCH: SystemTime = UNIX_EPOCH;
 
+    /// TODO
+    #[unstable(feature = "time_saturating_add", issue = "none")]
+    pub const MAX: SystemTime = SystemTime(time::SystemTime::MAX);
+
+    /// TODO
+    #[unstable(feature = "time_saturating_add", issue = "none")]
+    pub const MIN: SystemTime = SystemTime(time::SystemTime::MIN);
+
     /// Returns the system time corresponding to "now".
     ///
     /// # Examples
@@ -599,6 +607,18 @@ impl SystemTime {
     #[stable(feature = "time_checked_add", since = "1.34.0")]
     pub fn checked_sub(&self, duration: Duration) -> Option<SystemTime> {
         self.0.checked_sub_duration(&duration).map(SystemTime)
+    }
+
+    /// TODO
+    #[unstable(feature = "time_saturating_add", issue = "none")]
+    pub fn saturating_add(&self, duration: Duration) -> SystemTime {
+        self.checked_add(duration).unwrap_or(Self::MAX)
+    }
+
+    /// TODO
+    #[unstable(feature = "time_saturating_add", issue = "none")]
+    pub fn saturating_sub(&self, duration: Duration) -> SystemTime {
+        self.checked_sub(duration).unwrap_or(Self::MIN)
     }
 }
 

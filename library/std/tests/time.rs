@@ -1,4 +1,5 @@
 #![feature(duration_constants)]
+#![feature(time_saturating_add)]
 
 use std::fmt::Debug;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -237,9 +238,51 @@ fn system_time_duration_since_max_range_on_unix() {
     let min = SystemTime::UNIX_EPOCH - (Duration::new(i64::MAX as u64 + 1, 0));
     let max = SystemTime::UNIX_EPOCH + (Duration::new(i64::MAX as u64, 999_999_999));
 
+    assert_eq!(min, SystemTime::MIN);
+    assert_eq!(max, SystemTime::MAX);
+
     let delta_a = max.duration_since(min).expect("duration_since overflow");
     let delta_b = min.duration_since(max).expect_err("duration_since overflow").duration();
 
     assert_eq!(Duration::MAX, delta_a);
     assert_eq!(Duration::MAX, delta_b);
+}
+
+#[test]
+fn system_time_saturating() {
+    // First, test everything with checked_* and Duration::ZERO.
+    assert_eq!(SystemTime::MAX.checked_add(Duration::ZERO), Some(SystemTime::MAX));
+    assert_eq!(SystemTime::MAX.checked_sub(Duration::ZERO), Some(SystemTime::MAX));
+    assert_eq!(SystemTime::MIN.checked_add(Duration::ZERO), Some(SystemTime::MIN));
+    assert_eq!(SystemTime::MIN.checked_sub(Duration::ZERO), Some(SystemTime::MIN));
+
+    // Now do the same again with checked_* but try by ± a single nanosecond.
+    assert!(SystemTime::MAX.checked_add(Duration::new(0, 1)).is_none());
+    assert!(SystemTime::MAX.checked_sub(Duration::new(0, 1)).is_some());
+    assert!(SystemTime::MIN.checked_add(Duration::new(0, 1)).is_some());
+    assert!(SystemTime::MIN.checked_sub(Duration::new(0, 1)).is_none());
+
+    // Okay, we now know that SystemTime::{MIN, MAX} are actually valid on the platform.
+    // In other words: SystemTime{MIN, MAX} is actually the minimum and maximum.
+
+    // Now check whether the saturating call on the MAX stays the same.
+    assert_eq!(SystemTime::MAX.saturating_add(Duration::ZERO), SystemTime::MAX);
+    assert_eq!(SystemTime::MAX.saturating_add(Duration::new(0, 1)), SystemTime::MAX);
+    assert_eq!(SystemTime::MAX.saturating_add(Duration::new(60, 0)), SystemTime::MAX);
+    assert_eq!(SystemTime::MAX.saturating_add(Duration::new(u64::MAX, 0)), SystemTime::MAX);
+    assert_eq!(SystemTime::MAX.saturating_sub(Duration::ZERO), SystemTime::MAX);
+    assert_eq!(
+        SystemTime::MAX.saturating_sub(Duration::new(0, 1)),
+        SystemTime::MAX.checked_sub(Duration::new(0, 1)).unwrap()
+    );
+
+    // Same as above but with MIN.
+    assert_eq!(SystemTime::MIN.saturating_sub(Duration::ZERO), SystemTime::MIN);
+    assert_eq!(SystemTime::MIN.saturating_sub(Duration::new(0, 1)), SystemTime::MIN);
+    assert_eq!(SystemTime::MIN.saturating_sub(Duration::new(60, 0)), SystemTime::MIN);
+    assert_eq!(SystemTime::MIN.saturating_sub(Duration::new(u64::MAX, 0)), SystemTime::MIN);
+    assert_eq!(
+        SystemTime::MIN.saturating_add(Duration::new(0, 1)),
+        SystemTime::MIN.checked_add(Duration::new(0, 1)).unwrap()
+    );
 }
