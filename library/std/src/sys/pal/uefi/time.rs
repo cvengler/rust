@@ -39,6 +39,24 @@ const MAX_UEFI_TIME: SystemTime = SystemTime::from_uefi(r_efi::efi::Time {
 });
 
 impl Instant {
+    #[unstable(feature = "time_systemtime_limits", issue = "none")]
+    pub const MAX: SystemTime = MAX_UEFI_TIME;
+
+    #[unstable(feature = "time_systemtime_limits", issue = "none")]
+    pub const MIN: SystemTime = SystemTime::from_uefi(r_efi::efi::Time {
+        year: 1900,
+        month: 1,
+        day: 1,
+        hour: 0,
+        minute: 0,
+        second: 0,
+        nanosecond: 0,
+        timezone: 0,
+        daylight: 0,
+        pad1: 0,
+        pad2: 0,
+    });
+
     pub fn now() -> Instant {
         // If we have a timestamp protocol, use it.
         if let Some(x) = instant_internal::timestamp_protocol() {
