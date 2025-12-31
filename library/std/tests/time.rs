@@ -1,5 +1,6 @@
 #![feature(duration_constants)]
 #![feature(time_systemtime_limits)]
+#![feature(saturating_systemtime)]
 
 use std::fmt::Debug;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -263,9 +264,29 @@ fn system_time_max_min() {
     assert_eq!(SystemTime::MIN.checked_add(Duration::ZERO), Some(SystemTime::MIN));
     assert_eq!(SystemTime::MIN.checked_sub(Duration::ZERO), Some(SystemTime::MIN));
 
+    // Now do the same but with `saturating_*`.
+    assert_eq!(SystemTime::MAX.saturating_add(Duration::ZERO), SystemTime::MAX);
+    assert_eq!(SystemTime::MAX.saturating_sub(Duration::ZERO), SystemTime::MAX);
+    assert_eq!(SystemTime::MIN.saturating_add(Duration::ZERO), SystemTime::MIN);
+    assert_eq!(SystemTime::MIN.saturating_sub(Duration::ZERO), SystemTime::MIN);
+
     // Now do the same again with checked_* but try by ± the lowest time precision.
     assert!(SystemTime::MAX.checked_add(MIN_INTERVAL).is_none());
     assert!(SystemTime::MAX.checked_sub(MIN_INTERVAL).is_some());
     assert!(SystemTime::MIN.checked_add(MIN_INTERVAL).is_some());
     assert!(SystemTime::MIN.checked_sub(MIN_INTERVAL).is_none());
+
+    // And again but with saturating_*.
+    assert_eq!(SystemTime::MAX.saturating_add(MIN_INTERVAL), SystemTime::MAX);
+    assert_eq!(SystemTime::MAX.saturating_sub(MIN_INTERVAL), SystemTime::MAX - MIN_INTERVAL);
+    assert_eq!(SystemTime::MIN.saturating_add(MIN_INTERVAL), SystemTime::MIN + MIN_INTERVAL);
+    assert_eq!(SystemTime::MIN.saturating_sub(MIN_INTERVAL), SystemTime::MIN);
+
+    // Last but not least, test saturating_duration_since.
+    assert_eq!(SystemTime::UNIX_EPOCH.saturating_duration_since(SystemTime::MAX), Duration::ZERO);
+    assert_eq!(
+        (SystemTime::UNIX_EPOCH + Duration::new(1, 0))
+            .saturating_duration_since(SystemTime::UNIX_EPOCH),
+        Duration::new(1, 0)
+    );
 }

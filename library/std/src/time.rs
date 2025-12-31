@@ -682,6 +682,28 @@ impl SystemTime {
     pub fn checked_sub(&self, duration: Duration) -> Option<SystemTime> {
         self.0.checked_sub_duration(&duration).map(SystemTime)
     }
+
+    /// Saturating version of [`SystemTime::checked_add()`], returning
+    /// [`SystemTime::MAX`] if an overflow occurred.
+    #[unstable(feature = "saturating_systemtime", issue = "none")]
+    pub fn saturating_add(self, duration: Duration) -> SystemTime {
+        self.checked_add(duration).unwrap_or(SystemTime::MAX)
+    }
+
+    /// Saturating version of [`SystemTime::checked_sub()`], returning
+    /// [`SystemTime::MIN`] if an overflow occurred.
+    #[unstable(feature = "saturating_systemtime", issue = "none")]
+    pub fn saturating_sub(self, duration: Duration) -> SystemTime {
+        self.checked_sub(duration).unwrap_or(SystemTime::MIN)
+    }
+
+    /// Saturating version of [`SystemTime::duration_since()`], returning
+    /// [`Duration::ZERO`] if the calculation failed, such as if `earlier` is
+    /// later than `self`.
+    #[unstable(feature = "saturating_systemtime", issue = "none")]
+    pub fn saturating_duration_since(self, earlier: SystemTime) -> Duration {
+        self.duration_since(earlier).unwrap_or(Duration::ZERO)
+    }
 }
 
 #[stable(feature = "time2", since = "1.8.0")]
