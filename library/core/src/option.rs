@@ -594,6 +594,7 @@ use crate::{cmp, convert, hint, mem, slice};
 #[derive(Copy, Debug, Hash)]
 #[derive_const(Eq)]
 #[rustc_diagnostic_item = "Option"]
+#[rustc_has_incoherent_inherent_impls]
 #[lang = "Option"]
 #[stable(feature = "rust1", since = "1.0.0")]
 #[allow(clippy::derived_hash_with_manual_eq)] // PartialEq is manually implemented equivalently
