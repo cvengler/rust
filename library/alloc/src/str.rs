@@ -204,13 +204,16 @@ impl BorrowMut<str> for String {
 #[cfg(not(no_global_oom_handling))]
 #[stable(feature = "rust1", since = "1.0.0")]
 impl ToOwned for str {
+    #[rustc_allow_incoherent_trait_impl]
     type Owned = String;
 
+    #[rustc_allow_incoherent_trait_impl]
     #[inline]
     fn to_owned(&self) -> String {
         unsafe { String::from_utf8_unchecked(self.as_bytes().to_owned()) }
     }
 
+    #[rustc_allow_incoherent_trait_impl]
     #[inline]
     fn clone_into(&self, target: &mut String) {
         target.clear();

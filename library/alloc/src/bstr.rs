@@ -559,8 +559,10 @@ impl PartialOrd for ByteString {
 
 #[unstable(feature = "bstr", issue = "134915")]
 impl ToOwned for ByteStr {
+    #[rustc_allow_incoherent_trait_impl]
     type Owned = ByteString;
 
+    #[rustc_allow_incoherent_trait_impl]
     #[inline]
     fn to_owned(&self) -> ByteString {
         ByteString(self.0.to_vec())

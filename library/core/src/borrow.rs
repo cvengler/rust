@@ -207,6 +207,59 @@ pub const trait BorrowMut<Borrowed: ?Sized>: [const] Borrow<Borrowed> {
     fn borrow_mut(&mut self) -> &mut Borrowed;
 }
 
+/// A generalization of `Clone` to borrowed data.
+///
+/// Some types make it possible to go from borrowed to owned, usually by
+/// implementing the `Clone` trait. But `Clone` works only for going from `&T`
+/// to `T`. The `ToOwned` trait generalizes `Clone` to construct owned data
+/// from any borrow of a given type.
+#[rustc_diagnostic_item = "ToOwned"]
+#[rustc_has_incoherent_trait_impls]
+#[stable(feature = "rust1", since = "1.0.0")]
+pub trait ToOwned {
+    /// The resulting type after obtaining ownership.
+    #[stable(feature = "rust1", since = "1.0.0")]
+    type Owned: Borrow<Self>;
+
+    /// Creates owned data from borrowed data, usually by cloning.
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// let s: &str = "a";
+    /// let ss: String = s.to_owned();
+    ///
+    /// let v: &[i32] = &[1, 2];
+    /// let vv: Vec<i32> = v.to_owned();
+    /// ```
+    #[stable(feature = "rust1", since = "1.0.0")]
+    #[must_use = "cloning is often expensive and is not expected to have side effects"]
+    #[rustc_diagnostic_item = "to_owned_method"]
+    fn to_owned(&self) -> Self::Owned;
+
+    /// Uses borrowed data to replace owned data, usually by cloning.
+    ///
+    /// This is borrow-generalized version of [`Clone::clone_from`].
+    ///
+    /// # Examples
+    ///
+    /// Basic usage:
+    ///
+    /// ```
+    /// let mut s: String = String::new();
+    /// "hello".clone_into(&mut s);
+    ///
+    /// let mut v: Vec<i32> = Vec::new();
+    /// [1, 2][..].clone_into(&mut v);
+    /// ```
+    #[stable(feature = "toowned_clone_into", since = "1.63.0")]
+    fn clone_into(&self, target: &mut Self::Owned) {
+        *target = self.to_owned();
+    }
+}
+
 #[stable(feature = "rust1", since = "1.0.0")]
 #[rustc_const_unstable(feature = "const_convert", issue = "143773")]
 impl<T: ?Sized> const Borrow<T> for T {
@@ -245,5 +298,20 @@ impl<T: ?Sized> const Borrow<T> for &mut T {
 impl<T: ?Sized> const BorrowMut<T> for &mut T {
     fn borrow_mut(&mut self) -> &mut T {
         self
+    }
+}
+
+#[stable(feature = "rust1", since = "1.0.0")]
+impl<T> ToOwned for T
+where
+    T: Clone,
+{
+    type Owned = T;
+    fn to_owned(&self) -> T {
+        self.clone()
+    }
+
+    fn clone_into(&self, target: &mut T) {
+        target.clone_from(self);
     }
 }

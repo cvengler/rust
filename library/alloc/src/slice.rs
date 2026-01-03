@@ -834,12 +834,15 @@ impl<T: TrivialClone, A: Allocator> SpecCloneIntoVec<T, A> for [T] {
 #[cfg(not(no_global_oom_handling))]
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T: Clone> ToOwned for [T] {
+    #[rustc_allow_incoherent_trait_impl]
     type Owned = Vec<T>;
 
+    #[rustc_allow_incoherent_trait_impl]
     fn to_owned(&self) -> Vec<T> {
         self.to_vec()
     }
 
+    #[rustc_allow_incoherent_trait_impl]
     fn clone_into(&self, target: &mut Vec<T>) {
         SpecCloneIntoVec::clone_into(self, target);
     }
